@@ -1,5 +1,4 @@
 import easyocr
-#class OCR:
 
 class OCR_Processor:
     def __init__(self):
