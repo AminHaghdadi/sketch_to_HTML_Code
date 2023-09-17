@@ -35,14 +35,50 @@ custom_prompt="""
          Generate only source code file, no description: {layout}.\n
     """
     
-custom1="""
-    just print{layout}
-"""
+
 prompt=PromptTemplate(template=custom_prompt,input_variables=['layout'])
 
-def html_generation(image):
-    layout=ocr_process(image)
+def html_generation(layout):
     chain=LLMChain(llm=llm,prompt=prompt)
     output=chain.run(layout=layout)
-    print(output)
+    return output
+
+if "html" not in st.session_state:
+    st.session_state.html=""
+if "image" not in st.session_state:
+    st.session_state.image=""
+
+def Run():
+    html_code=""
     
+    layouts=ocr_process(st.session_state.image)
+    if layouts != []:
+        html_code=html_generation(layouts)
+    
+    
+    st.session_state.html=html_code
+    st.session_state.image=st.session_state.image
+    
+st.set_page_config(layout="wide")
+st.markdown("<h1 style='text-align: center; color: black;'>HTML generator from Sketch</h1>", unsafe_allow_html=True)
+
+col1,col2=st.columns([0.5,0.5],gap='medium')
+
+with col1:
+    upload_file=st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+    if upload_file is not None:
+        image_file_name=upload_file.name
+        st.image(upload_file,caption="Uploaded Image", use_column_width=True)
+        image=Image.open(upload_file)
+        image.save(image_file_name)
+        
+        st.session_state.image=image_file_name
+        st.button('Run',on_click=Run)
+
+with col2:
+    if st.session_state.html != "":
+        with st.expander("See Source Code") :
+            st.code(st.session_state.html)
+            
+        with st.container():
+            components.html(st.session_state.html,height=600, scrolling=True)
