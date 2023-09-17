@@ -1,0 +1,4 @@
+easyocr
+openai
+Pillow
+streamlit
